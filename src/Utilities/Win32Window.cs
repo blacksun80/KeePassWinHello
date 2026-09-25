@@ -97,11 +97,7 @@ namespace KeePassWinHello
                 var found = IntPtr.Zero;
                 WinAPI.EnumWindows((hwnd, lParam) =>
                 {
-                    if (existing.Contains(hwnd) || !WinAPI.IsWindowVisible(hwnd))
-                        return true;
-                    if (@class != null && !HasClass(hwnd, @class))
-                        return true;
-                    if (name != null && GetText(hwnd) != name)
+                    if (!IsNewMatch(hwnd, @class, name, existing))
                         return true;
 
                     found = hwnd;
@@ -115,6 +111,15 @@ namespace KeePassWinHello
             }
 
             return null;
+        }
+
+        private static bool IsNewMatch(IntPtr hwnd, string @class, string name, ICollection<IntPtr> existing)
+        {
+            if (existing.Contains(hwnd) || !WinAPI.IsWindowVisible(hwnd))
+                return false;
+            if (@class != null && !HasClass(hwnd, @class))
+                return false;
+            return name == null || GetText(hwnd) == name;
         }
 
         private static bool HasClass(IntPtr hwnd, string @class)

@@ -83,7 +83,7 @@ namespace KeePassWinHello
         private const string PromptWindowTitle = null;
 #endif
 
-        private void MakePromptWindowForegroundSafe(ICollection<IntPtr> existingDialogs)
+        private static void MakePromptWindowForegroundSafe(ICollection<IntPtr> existingDialogs)
         {
             try
             {
