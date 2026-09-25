@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -41,7 +42,8 @@ namespace KeePassWinHello
             using (var tokenSource = new CancellationTokenSource())
             {
                 Win32Window.AllowAllSetForeground();
-                Task.Factory.StartNew(MakePromptWindowForegroundSafe, tokenSource.Token);
+                var existingDialogs = Win32Window.FindAll(PromptWindowClass);
+                Task.Factory.StartNew(() => MakePromptWindowForegroundSafe(existingDialogs), tokenSource.Token);
 
                 try
                 {
@@ -70,16 +72,22 @@ namespace KeePassWinHello
             }
         }
 
-        private void MakePromptWindowForegroundSafe()
+#if DEBUG
+        // The dummy provider shows a message box with this fixed title
+        private const string PromptWindowClass = null;
+        private const string PromptWindowTitle = "Windows Security";
+#else
+        // The title is localized ("Windows-Sicherheit" on German Windows), so match the class only
+        // and take the dialog that appears after the prompt was started
+        private const string PromptWindowClass = "Credential Dialog Xaml Host";
+        private const string PromptWindowTitle = null;
+#endif
+
+        private void MakePromptWindowForegroundSafe(ICollection<IntPtr> existingDialogs)
         {
             try
             {
-#if DEBUG
-                const string targetWindowClass = null;
-#else
-                const string targetWindowClass = "Credential Dialog Xaml Host"; 
-#endif
-                var win = Win32Window.Find(targetWindowClass, "Windows Security", 2000);
+                var win = Win32Window.FindNew(PromptWindowClass, PromptWindowTitle, existingDialogs, 2000);
                 if (win != null)
                     win.EnsureForeground();
             }
